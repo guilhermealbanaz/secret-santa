@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DrawPage } from './presentation/pages/DrawPage';
 import { DrawFactory } from './infrastructure/factories/DrawFactory';
 

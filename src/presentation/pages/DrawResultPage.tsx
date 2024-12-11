@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button';
 import { Draw } from '../../domain/entities/Draw';
 import { DrawFactory } from '../../infrastructure/factories/DrawFactory';
 import { ArrowLeft, Link as LinkIcon, Check, Mail } from 'lucide-react';
+import { config } from '../../lib/config';
 
 interface Participant {
   name: string;
@@ -52,7 +53,7 @@ export const DrawResultPage: React.FC = () => {
   }, [id, navigate]);
 
   const copyLink = async (email: string) => {
-    const link = `${window.location.origin}/draw/${id}/result/${email}`;
+    const link = `${config.baseUrl}/draw/${id}/result/${email}`;
     try {
       await navigator.clipboard.writeText(link);
       setLinkCopied(email);

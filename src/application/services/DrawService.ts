@@ -1,3 +1,5 @@
+import { Draw } from "../../domain/entities/Draw";
+
 export class DrawService {
   async perform(draw: Draw): Promise<Draw> {
     if (draw.participants.length < 2) {
