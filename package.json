@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://ahorademudar.com.br",
+  "homepage": "https://[seu-usuario].github.io/secret-santa/",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

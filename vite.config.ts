@@ -21,5 +21,10 @@ export default defineConfig({
       }
     },
     chunkSizeWarningLimit: 600
+  },
+  server: {
+    headers: {
+      'Content-Type': 'application/javascript'
+    }
   }
 }) 
