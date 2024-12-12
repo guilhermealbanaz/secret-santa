@@ -3,24 +3,28 @@ export class Email {
 
   constructor(email: string) {
     if (!this.isValid(email)) {
-      throw new Error('Email inválido');
+      throw new Error('Invalid email format');
     }
-    this._value = email.toLowerCase().trim();
+    this._value = email;
   }
 
   private isValid(email: string): boolean {
-    if (!email || email.trim().length === 0) {
-      return false;
-    }
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
+    if (!email || typeof email !== 'string') return false;
+    
+    // Regex mais permissiva para validação de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  get value(): string {
+    return this._value;
   }
 
   equals(other: Email): boolean {
     return this._value === other.value;
   }
 
-  get value(): string {
+  toString(): string {
     return this._value;
   }
 } 

@@ -3,57 +3,71 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Draw } from '../../domain/entities/Draw';
 import { DrawFactory } from '../../infrastructure/factories/DrawFactory';
+import { Participant } from '../../domain/entities/Participant';
+import { Draw } from '../../domain/entities/Draw';
+import { formatErrorMessage } from '../../domain/errors/formatErrorMessage';
 
-export const ParticipantRegistrationPage: React.FC = () => {
+export function ParticipantRegistrationPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  const validateInputs = (): boolean => {
+    if (!name.trim()) {
+      setError('Nome é obrigatório');
+      return false;
+    }
+    if (!email.trim()) {
+      setError('Email é obrigatório');
+      return false;
+    }
+    return true;
+  };
 
   const registerParticipant = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email || !id) return;
+    if (!id || !validateInputs()) return;
 
     setLoading(true);
-    setError('');
+    setError(null);
 
     try {
       const repository = DrawFactory.createRepository();
-      const docSnap = await repository.observe(id, async (draw) => {
-        const participants = draw.participants || [];
-        
-        if (participants.some(p => p.email === email)) {
-          setError('Este email já está registrado no sorteio.');
-          setLoading(false);
-          return;
-        }
+      const draw = await repository.findById(id);
 
-        const newParticipant = { name, email };
-        const updatedDraw = new Draw(
-          id,
-          draw.name,
-          draw.password,
-          [...participants, newParticipant],
-          draw.result,
-          draw.performed,
-          draw.creationDate,
-          draw.configured
-        );
+      if (!draw) {
+        setError('Sorteio não encontrado');
+        return;
+      }
 
-        await repository.update(updatedDraw);
-        setSuccess(true);
-        setLoading(false);
-      });
+      if (draw.participants?.some(p => p.email.toLowerCase() === email.toLowerCase())) {
+        setError('Este email já está registrado');
+        return;
+      }
 
-      return () => docSnap();
+      const newParticipant = Participant.create(name.trim(), email.trim().toLowerCase());
+      const updatedParticipants = [...(draw.participants || []), newParticipant];
+      
+      const updatedDraw = new Draw(
+        id,
+        draw.name,
+        draw.password,
+        updatedParticipants,
+        draw.result,
+        draw.performed
+      );
+
+      await repository.update(updatedDraw);
+      setSuccess(true);
     } catch (error) {
       console.error('Error registering participant:', error);
-      setError('Error registering participant. Please try again.');
+      setError(formatErrorMessage(error as Error));
+    } finally {
       setLoading(false);
     }
   };
@@ -138,4 +152,4 @@ export const ParticipantRegistrationPage: React.FC = () => {
       </div>
     </div>
   );
-}; 
+} 

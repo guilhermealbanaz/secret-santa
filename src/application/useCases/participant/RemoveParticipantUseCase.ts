@@ -1,25 +1,20 @@
-import { IParticipantRepository } from '../../ports/IParticipantRepository';
 import { IDrawRepository } from '../../ports/IDrawRepository';
-import { Id } from '../../../domain/valueObjects/Id';
+import { IParticipantRepository } from '../../ports/IParticipantRepository';
+import { DrawNotFoundError } from '../../../domain/errors/DomainErrors';
 
 export class RemoveParticipantUseCase {
   constructor(
-    private participantRepository: IParticipantRepository,
-    private drawRepository: IDrawRepository
+    private readonly participantRepository: IParticipantRepository,
+    private readonly drawRepository: IDrawRepository
   ) {}
 
   async execute(drawId: string, participantId: string): Promise<void> {
-    const idDraw = new Id(drawId);
-    const idParticipant = new Id(participantId);
-
-    const draw = await this.drawRepository.findById(idDraw);
+    const draw = await this.drawRepository.findById(drawId);
+    
     if (!draw) {
-      throw new Error('Draw not found');
-    }
-    if (draw.performed) {
-      throw new Error('Cannot remove participants after the draw has been performed');
+      throw new DrawNotFoundError(drawId);
     }
 
-    await this.participantRepository.remove(idDraw, idParticipant);
+    await this.participantRepository.remove(drawId, participantId);
   }
 } 

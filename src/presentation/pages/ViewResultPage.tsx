@@ -5,10 +5,11 @@ import { DrawFactory } from '../../infrastructure/factories/DrawFactory';
 import { Draw } from '../../domain/entities/Draw';
 import { Button } from '../components/ui/button';
 import { ArrowLeft, Gift, User } from 'lucide-react';
+import { Participant } from '../../domain/entities/Participant';
 
 interface ParticipantResult {
-  giver: { name: string; email: string };
-  receiver: { name: string; email: string };
+  giver: Participant;
+  receiver: Participant;
 }
 
 export function ViewResultPage() {
@@ -30,9 +31,7 @@ export function ViewResultPage() {
 
       try {
         const repository = DrawFactory.createRepository();
-        const draw = await repository.getById(id);
-
-        setDraw(draw);
+        const draw = await repository.findById(id);
 
         if (!draw) {
           setError('Draw not found');
@@ -40,14 +39,16 @@ export function ViewResultPage() {
           return;
         }
 
-        const receiverEmail = draw.result[email];
-        if (!receiverEmail) {
+        setDraw(draw);
+
+        if (!draw.result || !draw.result[email]) {
           setError('Result not found');
           setLoading(false);
           return;
         }
 
         const giver = draw.participants.find(p => p.email === email);
+        const receiverEmail = draw.result[email];
         const receiver = draw.participants.find(p => p.email === receiverEmail);
 
         if (!giver || !receiver) {
@@ -88,7 +89,7 @@ export function ViewResultPage() {
     );
   }
 
-return (
+  return (
     <div className="min-h-screen w-full bg-gradient-to-br from-[#0A0F1E] via-[#121A3A] to-[#0A0F1E] p-8">
       <Button
         variant="ghost"
@@ -110,7 +111,7 @@ return (
         <Card className="bg-[#151B30]/50 border border-[#252B45] shadow-xl backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-white text-center">
-              Olá, {result?.giver?.name}!
+              {result?.giver?.name && `Olá, ${result.giver.name}!`}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-8">
@@ -138,10 +139,10 @@ return (
                   <div>
                     <p className="text-gray-400 mb-2">Seu amigo secreto é</p>
                     <h2 className="text-3xl font-bold text-white mb-1">
-                      {result.receiver.name}
+                      {result?.receiver?.name}
                     </h2>
                     <p className="text-gray-400 text-sm">
-                      {result.receiver.email}
+                      {result?.receiver?.email}
                     </p>
                   </div>
                   <div className="pt-4 border-t border-[#252B45]">
@@ -157,4 +158,4 @@ return (
       </div>
     </div>
   );
-}; 
+} 

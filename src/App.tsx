@@ -1,16 +1,8 @@
-import { useEffect, useState } from 'react';
-import { DrawPage } from './presentation/pages/DrawPage';
-import { DrawFactory } from './infrastructure/factories/DrawFactory';
+import { AppRoutes } from './presentation/routes';
+import './App.css';
 
 function App() {
-  const [useCases, setUseCases] = useState(null);
-
-  useEffect(() => {
-    DrawFactory.createUseCases().then(setUseCases);
-  }, []);
-
-  if (!useCases) return null;
-  return <DrawPage useCases={useCases} />;
+  return <AppRoutes />;
 }
 
 export default App;

@@ -1,19 +1,14 @@
-import { Draw } from '../../../domain/entities/Draw';
 import { IDrawRepository } from '../../ports/IDrawRepository';
+import { Draw } from '../../../domain/entities/Draw';
+import { Id } from '../../../domain/valueObjects/Id';
 
 export class CreateDrawUseCase {
-  constructor(private drawRepository: IDrawRepository) {}
+  constructor(private readonly drawRepository: IDrawRepository) {}
 
-  async execute(name: string, password: string): Promise<string> {
-    const id = this.generateId();
-    const draw = new Draw(id, name, password);
-    
-    await this.drawRepository.create(draw);
-    
+  async execute(): Promise<string> {
+    const id = new Id().value;
+    const draw = new Draw(id, '', '', [], {}, false);
+    await this.drawRepository.update(draw);
     return id;
-  }
-
-  private generateId(): string {
-    return Math.random().toString(36).substr(2, 9);
   }
 } 

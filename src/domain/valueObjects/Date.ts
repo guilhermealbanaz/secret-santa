@@ -1,26 +1,22 @@
-export class Date {
+export class DateVO {
   private readonly _value: Date;
 
-  constructor(date?: Date | string) {
-    if (date instanceof Date) {
-      this._value = date;
-    } else if (typeof date === 'string') {
-      const convertedDate = new Date(date);
-      if (isNaN(convertedDate.getTime())) {
-        throw new Error('Invalid date');
-      }
-      this._value = convertedDate;
-    } else {
-      this._value = new Date();
+  constructor(date: Date | string) {
+    const convertedDate = typeof date === 'string' ? new Date(date) : date;
+    
+    if (!(convertedDate instanceof Date) || Number.isNaN(convertedDate.getTime())) {
+      throw new Error('Invalid date');
     }
-  }
 
-  equals(other: Date): boolean {
-    return this._value.getTime() === other.value.getTime();
+    this._value = convertedDate;
   }
 
   get value(): Date {
-    return new Date(this._value);
+    return this._value;
+  }
+
+  equals(other: DateVO): boolean {
+    return this._value.getTime() === other.value.getTime();
   }
 
   toString(): string {

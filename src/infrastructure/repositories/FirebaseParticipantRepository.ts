@@ -4,125 +4,117 @@ import { Email } from '../../domain/valueObjects/Email';
 import { Id } from '../../domain/valueObjects/Id';
 import { DatabaseError } from '../../domain/errors/DomainErrors';
 import { firestore } from '../services/FirebaseService';
+import { 
+  collection,
+  doc,
+  setDoc,
+  deleteDoc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  onSnapshot,
+  writeBatch
+} from 'firebase/firestore';
 
 export class FirebaseParticipantRepository implements IParticipantRepository {
   private readonly collection = 'participants';
 
-  async add(drawId: Id, participant: Participant): Promise<void> {
+  async add(drawId: string, participant: Participant): Promise<void> {
     try {
-      await firestore
-        .collection('draws')
-        .doc(drawId.value)
-        .collection(this.collection)
-        .doc(participant.id)
-        .set(this.mapToFirestore(participant));
+      const drawRef = doc(firestore, 'draws', drawId);
+      const participantRef = doc(collection(drawRef, this.collection), participant.id);
+      const participantData = {
+        id: participant.id,
+        name: participant.name,
+        email: participant.email,
+        createdAt: new Date().toISOString()
+      };
+      
+      await setDoc(participantRef, participantData);
     } catch (error) {
+      console.error('Error adding participant:', error);
       throw new DatabaseError('add', error as Error);
     }
   }
 
-  async remove(drawId: Id, participantId: Id): Promise<void> {
+  async remove(drawId: string, participantId: string): Promise<void> {
     try {
-      await firestore
-        .collection('draws')
-        .doc(drawId.value)
-        .collection(this.collection)
-        .doc(participantId.value)
-        .delete();
+      const drawRef = doc(firestore, 'draws', drawId);
+      const participantRef = doc(collection(drawRef, this.collection), participantId);
+      await deleteDoc(participantRef);
     } catch (error) {
       throw new DatabaseError('remove', error as Error);
     }
   }
 
-  async findById(drawId: Id, participantId: Id): Promise<Participant | null> {
+  async findById(drawId: string, participantId: string): Promise<Participant | null> {
     try {
-      const doc = await firestore
-        .collection('draws')
-        .doc(drawId.value)
-        .collection(this.collection)
-        .doc(participantId.value)
-        .get();
+      const drawRef = doc(firestore, 'draws', drawId);
+      const participantRef = doc(collection(drawRef, this.collection), participantId);
+      const docSnap = await getDoc(participantRef);
 
-      if (!doc.exists) return null;
-      return this.mapToParticipant(doc.data() as any);
+      if (!docSnap.exists()) return null;
+      return this.mapToParticipant(docSnap.data());
     } catch (error) {
       throw new DatabaseError('findById', error as Error);
     }
   }
 
-  async findByEmail(drawId: Id, email: Email): Promise<Participant | null> {
+  async findByEmail(drawId: string, email: string): Promise<Participant | null> {
     try {
-      const snapshot = await firestore
-        .collection('draws')
-        .doc(drawId.value)
-        .collection(this.collection)
-        .where('email', '==', email.value)
-        .get();
+      const drawRef = doc(firestore, 'draws', drawId);
+      const participantsRef = collection(drawRef, this.collection);
+      const q = query(participantsRef, where('email', '==', email));
+      const querySnapshot = await getDocs(q);
 
-      if (snapshot.empty) return null;
-      return this.mapToParticipant(snapshot.docs[0].data());
+      if (querySnapshot.empty) return null;
+      return this.mapToParticipant(querySnapshot.docs[0].data());
     } catch (error) {
       throw new DatabaseError('findByEmail', error as Error);
     }
   }
 
-  async listByDraw(drawId: Id): Promise<Participant[]> {
+  async listByDraw(drawId: string): Promise<Participant[]> {
     try {
-      const snapshot = await firestore
-        .collection('draws')
-        .doc(drawId.value)
-        .collection(this.collection)
-        .get();
+      const drawRef = doc(firestore, 'draws', drawId);
+      const participantsRef = collection(drawRef, this.collection);
+      const querySnapshot = await getDocs(participantsRef);
 
-      return snapshot.docs.map(doc => this.mapToParticipant(doc.data()));
+      return querySnapshot.docs.map(doc => this.mapToParticipant(doc.data()));
     } catch (error) {
       throw new DatabaseError('listByDraw', error as Error);
     }
   }
 
-  async emailAlreadyRegistered(drawId: Id, email: Email): Promise<boolean> {
-    try {
-      const participant = await this.findByEmail(drawId, email);
-      return participant !== null;
-    } catch (error) {
-      throw new DatabaseError('emailAlreadyRegistered', error as Error);
-    }
+  observeParticipants(drawId: string, callback: (participants: Participant[]) => void): () => void {
+    const drawRef = doc(firestore, 'draws', drawId);
+    const participantsRef = collection(drawRef, this.collection);
+
+    return onSnapshot(participantsRef, (snapshot) => {
+      const participants = snapshot.docs.map(doc => this.mapToParticipant(doc.data()));
+      callback(participants);
+    });
   }
 
-  observeParticipants(drawId: Id, callback: (participants: Participant[]) => void): () => void {
-    return firestore
-      .collection('draws')
-      .doc(drawId.value)
-      .collection(this.collection)
-      .onSnapshot((snapshot) => {
-        const participants = snapshot.docs.map(doc => this.mapToParticipant(doc.data()));
-        callback(participants);
-      });
-  }
-
-  async update(drawId: Id, participant: Participant): Promise<void> {
+  async update(drawId: string, participant: Participant): Promise<void> {
     try {
-      await firestore
-        .collection('draws')
-        .doc(drawId.value)
-        .collection(this.collection)
-        .doc(participant.id)
-        .update(this.mapToFirestore(participant));
+      const drawRef = doc(firestore, 'draws', drawId);
+      const participantRef = doc(collection(drawRef, this.collection), participant.id);
+      await setDoc(participantRef, this.mapToFirestore(participant), { merge: true });
     } catch (error) {
       throw new DatabaseError('update', error as Error);
     }
   }
 
-  async removeAll(drawId: Id): Promise<void> {
+  async removeAll(drawId: string): Promise<void> {
     try {
-      const batch = firestore.batch();
-      const snapshot = await firestore
-        .collection('draws')
-        .doc(drawId.value)
-        .collection(this.collection)
-        .get();
+      const drawRef = doc(firestore, 'draws', drawId);
+      const participantsRef = collection(drawRef, this.collection);
+      const querySnapshot = await getDocs(participantsRef);
+      const batch = writeBatch(firestore);
 
-      snapshot.docs.forEach(doc => {
+      querySnapshot.docs.forEach(doc => {
         batch.delete(doc.ref);
       });
 
@@ -132,15 +124,13 @@ export class FirebaseParticipantRepository implements IParticipantRepository {
     }
   }
 
-  async countParticipants(drawId: Id): Promise<number> {
+  async countParticipants(drawId: string): Promise<number> {
     try {
-      const snapshot = await firestore
-        .collection('draws')
-        .doc(drawId.value)
-        .collection(this.collection)
-        .get();
+      const drawRef = doc(firestore, 'draws', drawId);
+      const participantsRef = collection(drawRef, this.collection);
+      const querySnapshot = await getDocs(participantsRef);
 
-      return snapshot.size;
+      return querySnapshot.size;
     } catch (error) {
       throw new DatabaseError('countParticipants', error as Error);
     }
@@ -150,7 +140,8 @@ export class FirebaseParticipantRepository implements IParticipantRepository {
     return {
       id: participant.id,
       name: participant.name,
-      email: participant.email
+      email: participant.email,
+      _type: 'participant'
     };
   }
 

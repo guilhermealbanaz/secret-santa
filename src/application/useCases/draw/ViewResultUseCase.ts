@@ -1,49 +1,46 @@
 import { IDrawRepository } from '../../ports/IDrawRepository';
-import { IParticipantRepository } from '../../ports/IParticipantRepository';
-import { Id } from '../../../domain/valueObjects/Id';
 import { Password } from '../../../domain/valueObjects/Password';
+import { 
+  DrawNotFoundError, 
+  DrawNotPerformedError,
+  InvalidPasswordError,
+  ParticipantNotFoundError 
+} from '../../../domain/errors/DomainErrors';
 import { Participant } from '../../../domain/entities/Participant';
 
-export interface DrawResult {
-  participant: Participant;
-  secretFriend: Participant;
-}
-
 export class ViewResultUseCase {
-  constructor(
-    private drawRepository: IDrawRepository,
-    private participantRepository: IParticipantRepository
-  ) {}
+  constructor(private readonly drawRepository: IDrawRepository) {}
 
-  async execute(drawId: string, participantId: string, password: string): Promise<DrawResult> {
-    const idDraw = new Id(drawId);
-    const idParticipant = new Id(participantId);
-    const passwordVO = new Password(password);
-
-    const draw = await this.drawRepository.findById(idDraw);
+  async execute(
+    drawId: string, 
+    participantId: string, 
+    password: string
+  ): Promise<{ participant: Participant; secretFriend: Participant }> {
+    const draw = await this.drawRepository.findById(drawId);
+    
     if (!draw) {
-      throw new Error('Draw not found');
-    }
-    if (!draw.performed) {
-      throw new Error('Draw has not been performed yet');
-    }
-    if (!draw.checkPassword(passwordVO)) {
-      throw new Error('Incorrect password');
+      throw new DrawNotFoundError(drawId);
     }
 
-    const participant = await this.participantRepository.findById(idDraw, idParticipant);
+    if (!draw.performed) {
+      throw new DrawNotPerformedError();
+    }
+
+    const passwordVO = new Password(password);
+    if (!draw.checkPassword(passwordVO)) {
+      throw new InvalidPasswordError();
+    }
+
+    const participant = draw.participants.find(p => p.id === participantId);
     if (!participant) {
-      throw new Error('Participant not found');
+      throw new ParticipantNotFoundError(participantId);
     }
 
     const secretFriend = draw.findSecretFriend(participant);
     if (!secretFriend) {
-      throw new Error('Secret friend not found');
+      throw new ParticipantNotFoundError('secret friend');
     }
 
-    return {
-      participant,
-      secretFriend
-    };
+    return { participant, secretFriend };
   }
 } 

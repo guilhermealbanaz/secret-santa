@@ -4,16 +4,15 @@ import { DatabaseError } from '../../domain/errors/DomainErrors';
 import { firestore } from '../services/FirebaseService';
 import { 
   doc, 
-  updateDoc, 
-  setDoc, 
-  getDoc, 
+  getDoc,
+  setDoc,
   onSnapshot 
 } from 'firebase/firestore';
 
 export class FirebaseDrawRepository implements IDrawRepository {
   private readonly collection = 'draws';
 
-  async getById(id: string): Promise<Draw | null> {
+  async findById(id: string): Promise<Draw | null> {
     try {
       const docRef = doc(firestore, this.collection, id);
       const docSnap = await getDoc(docRef);
@@ -31,7 +30,22 @@ export class FirebaseDrawRepository implements IDrawRepository {
   async update(draw: Draw): Promise<void> {
     try {
       const drawRef = doc(firestore, this.collection, draw.id);
-      await setDoc(drawRef, draw.toJSON(), { merge: true });
+      const drawData = {
+        id: draw.id,
+        name: draw.name,
+        password: draw.password,
+        participants: draw.participants ? draw.participants.map(p => ({
+          id: p.id,
+          name: p.name,
+          email: p.email
+        })) : [],
+        result: draw.result || {},
+        performed: draw.performed || false,
+        creationDate: draw.creationDate ? draw.creationDate.toISOString() : new Date().toISOString(),
+        configured: draw.configured || false
+      };
+      
+      await setDoc(drawRef, drawData, { merge: true });
     } catch (error) {
       console.error('Erro ao atualizar:', error);
       throw new DatabaseError('update', error as Error);

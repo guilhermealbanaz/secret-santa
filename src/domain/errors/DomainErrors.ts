@@ -6,8 +6,8 @@ export class DomainError extends Error {
 }
 
 export class DrawError extends DomainError {
-  constructor(message: string) {
-    super(`Draw error: ${message}`);
+  constructor(operation: string, error?: Error) {
+    super(error?.message || `Error in draw operation: ${operation}`);
   }
 }
 
@@ -36,8 +36,8 @@ export class DrawNotFoundError extends DrawError {
 }
 
 export class ParticipantError extends DomainError {
-  constructor(message: string) {
-    super(`Participant error: ${message}`);
+  constructor(operation: string, error?: Error) {
+    super(error?.message || `Error in participant operation: ${operation}`);
   }
 }
 
@@ -79,7 +79,7 @@ export class InvalidPasswordError extends ValidationError {
 
 export class ResultError extends DomainError {
   constructor(message: string) {
-    super(`Result error: ${message}`);
+    super(message);
   }
 }
 
@@ -101,9 +101,9 @@ export class InfrastructureError extends DomainError {
   }
 }
 
-export class DatabaseError extends InfrastructureError {
+export class DatabaseError extends DomainError {
   constructor(operation: string, error: Error) {
-    super(`Error in operation ${operation}: ${error.message}`);
+    super(`Database error in operation ${operation}: ${error.message}`);
   }
 }
 

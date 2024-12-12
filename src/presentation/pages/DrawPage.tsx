@@ -1,61 +1,39 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Draw } from '../../domain/entities/Draw';
 import { DrawFactory } from '../../infrastructure/factories/DrawFactory';
+import { Draw } from '../../domain/entities/Draw';
 import { ArrowLeft } from 'lucide-react';
+import { formatErrorMessage } from '../../domain/errors/formatErrorMessage';
 
-export const DrawPage: React.FC = () => {
+export function DrawPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const backToHome = () => {
     navigate('/', { replace: true });
   };
 
   const saveConfiguration = async () => {
-    if (!name || !password) return;
+    if (!name || !password || !id) return;
     setLoading(true);
+    setError(null);
 
     try {
       const repository = DrawFactory.createRepository();
-      const draw = new Draw(id!, name, password);
+      const draw = new Draw(id, name, password);
       await repository.update(draw);
       navigate(`/draw/${id}/participants`);
     } catch (error) {
-      console.error('Error saving configuration:', error);
+      setError(formatErrorMessage(error as Error));
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handlePerformDraw = async () => {
-    if (!id) return;
-
-    try {
-      const repository = DrawFactory.createRepository();
-      const drawService = DrawFactory.createService();
-      
-      // Buscar o draw atual
-      const currentDraw = await repository.getById(id);
-      if (!currentDraw) throw new Error('Draw not found');
-
-      // Realizar o sorteio
-      const updatedDraw = await drawService.perform(currentDraw);
-      
-      // Salvar o resultado
-      await repository.update(updatedDraw);
-
-      // Navegar para a página de resultado
-      navigate(`/draw/${id}/result`);
-    } catch (error) {
-      console.error('Erro ao realizar sorteio:', error);
-      // Adicione aqui algum feedback visual para o usuário
     }
   };
 
@@ -113,6 +91,12 @@ export const DrawPage: React.FC = () => {
                   Você precisará desta senha para gerenciar o sorteio
                 </p>
               </div>
+
+              {error && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <p className="text-red-500 text-sm text-center">{error}</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -174,4 +158,4 @@ export const DrawPage: React.FC = () => {
       </div>
     </div>
   );
-}; 
+} 
