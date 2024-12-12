@@ -1,0 +1,1 @@
+import{V as e,b as a}from"./DrawFactory-9IjlckUi.js";function n(r){return r instanceof e?`Erro de validação: ${r.message}`:r instanceof a?r.message:"Ocorreu um erro inesperado. Por favor, tente novamente."}export{n as f};
