@@ -8,7 +8,7 @@ import { DrawFactory } from '../../infrastructure/factories/DrawFactory';
 import { Participant } from '../../domain/entities/Participant';
 import { Trash2, Link as LinkIcon, Check, Shuffle } from 'lucide-react';
 
-export function ParticipantsPage() {
+export default function ParticipantsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [draw, setDraw] = useState<Draw | null>(null);

@@ -8,7 +8,7 @@ import { Participant } from '../../domain/entities/Participant';
 import { Draw } from '../../domain/entities/Draw';
 import { formatErrorMessage } from '../../domain/errors/formatErrorMessage';
 
-export function ParticipantRegistrationPage() {
+export default function ParticipantRegistrationPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [name, setName] = useState('');

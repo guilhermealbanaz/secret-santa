@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -7,7 +7,7 @@ import { DrawFactory } from '../../infrastructure/factories/DrawFactory';
 import { ArrowLeft, Link as LinkIcon, Check, Mail } from 'lucide-react';
 import { config } from '../../lib/config';
 
-export const DrawResultPage: React.FC = () => {
+export default function DrawResultPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [draw, setDraw] = useState<Draw | null>(null);

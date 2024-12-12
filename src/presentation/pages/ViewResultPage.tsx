@@ -12,7 +12,7 @@ interface ParticipantResult {
   receiver: Participant;
 }
 
-export function ViewResultPage() {
+export default function ViewResultPage() {
   const navigate = useNavigate();
   const { id, email } = useParams<{ id: string; email: string }>();
   const [result, setResult] = useState<ParticipantResult | null>(null);

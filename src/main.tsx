@@ -1,11 +1,25 @@
-import './infrastructure/services/FirebaseService';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { AppRoutes } from './presentation/routes';
 import './index.css';
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <AppRoutes />
-  </React.StrictMode>
-);
+// Inicialização do Firebase
+const initFirebase = async () => {
+  try {
+    const { initializeFirebase } = await import('./infrastructure/config/firebase');
+    return initializeFirebase();
+  } catch (error) {
+    console.error('Error initializing Firebase:', error);
+  }
+};
+
+// IIFE para inicializar o Firebase e renderizar a aplicação
+(async () => {
+  await initFirebase();
+  
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <AppRoutes />
+    </React.StrictMode>
+  );
+})();

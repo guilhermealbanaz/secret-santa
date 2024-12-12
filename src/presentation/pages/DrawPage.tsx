@@ -8,7 +8,7 @@ import { Draw } from '../../domain/entities/Draw';
 import { ArrowLeft } from 'lucide-react';
 import { formatErrorMessage } from '../../domain/errors/formatErrorMessage';
 
-export function DrawPage() {
+export default function DrawPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [name, setName] = useState('');
