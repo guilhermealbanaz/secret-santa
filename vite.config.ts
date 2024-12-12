@@ -6,6 +6,7 @@ export default defineConfig({
   base: '/secret-santa/',
   build: {
     outDir: 'dist',
+    assetsDir: 'assets',
     rollupOptions: {
       output: {
         manualChunks: {

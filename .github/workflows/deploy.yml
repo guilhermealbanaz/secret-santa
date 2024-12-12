@@ -34,7 +34,9 @@ jobs:
           VITE_APP_URL: ${{ secrets.VITE_APP_URL }}
 
       - name: Create .nojekyll file
-        run: touch dist/.nojekyll
+        run: |
+          touch dist/.nojekyll
+          cp dist/index.html dist/404.html
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
@@ -42,4 +44,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: gh-pages
           folder: dist
-          clean: true 
+          clean: true
+          clean-exclude: |
+            .nojekyll
