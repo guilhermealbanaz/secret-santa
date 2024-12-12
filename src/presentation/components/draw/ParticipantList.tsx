@@ -23,37 +23,43 @@ export const ParticipantList: React.FC<ParticipantListProps> = ({
 }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setMessage('');
+    setErrorMessage('');
+    setStatusMessage('');
 
     try {
       await addUseCase.execute(drawId, name, email);
       setName('');
       setEmail('');
-      setMessage('Participant added successfully!');
-      setTimeout(() => setMessage(''), 3000);
+      setStatusMessage('Participant added successfully!');
+      setTimeout(() => setStatusMessage(''), 3000);
     } catch (error) {
-      setError(formatErrorMessage(error as Error));
+      setErrorMessage(formatErrorMessage(error as Error));
     }
   };
 
   const handleRemove = async (participantId: string) => {
     try {
       await removeUseCase.execute(drawId, participantId);
-      setMessage('Participant removed successfully!');
-      setTimeout(() => setMessage(''), 3000);
+      setStatusMessage('Participant removed successfully!');
+      setTimeout(() => setStatusMessage(''), 3000);
     } catch (error) {
-      setError(formatErrorMessage(error as Error));
+      setErrorMessage(formatErrorMessage(error as Error));
     }
   };
 
   return (
     <div className="space-y-6">
+      {errorMessage && (
+        <div className="text-red-600 text-sm">{errorMessage}</div>
+      )}
+      {statusMessage && (
+        <div className="text-green-600 text-sm">{statusMessage}</div>
+      )}
       {!drawPerformed && (
         <form onSubmit={handleAdd} className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

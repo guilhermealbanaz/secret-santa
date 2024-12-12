@@ -1,7 +1,5 @@
 import { IParticipantRepository } from '../../application/ports/IParticipantRepository';
 import { Participant } from '../../domain/entities/Participant';
-import { Email } from '../../domain/valueObjects/Email';
-import { Id } from '../../domain/valueObjects/Id';
 import { DatabaseError } from '../../domain/errors/DomainErrors';
 import { firestore } from '../services/FirebaseService';
 import { 

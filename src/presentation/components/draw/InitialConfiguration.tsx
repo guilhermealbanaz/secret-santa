@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Name } from '../../../domain/valueObjects/Name';
 import { ConfigureDrawUseCase } from '../../../application/useCases/draw/ConfigureDrawUseCase';
 import { formatErrorMessage } from '../../../domain/errors/formatErrorMessage';
 

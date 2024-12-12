@@ -7,7 +7,6 @@ import { Draw } from '../../domain/entities/Draw';
 import { DrawFactory } from '../../infrastructure/factories/DrawFactory';
 import { Participant } from '../../domain/entities/Participant';
 import { Trash2, Link as LinkIcon, Check, Shuffle } from 'lucide-react';
-import { formatErrorMessage } from '../../domain/errors/formatErrorMessage';
 
 export function ParticipantsPage() {
   const { id } = useParams<{ id: string }>();
@@ -16,7 +15,6 @@ export function ParticipantsPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
 
   useEffect(() => {
@@ -36,14 +34,12 @@ export function ParticipantsPage() {
     if (!name || !email || !draw || !id) return;
 
     setLoading(true);
-    setError(null);
 
     try {
       const repository = DrawFactory.createRepository();
       
       // Verificar se o email já está registrado
       if (draw.participants?.some(p => p.email.toLowerCase() === email.toLowerCase())) {
-        setError('Este email já está registrado');
         setLoading(false);
         return;
       }
@@ -71,7 +67,6 @@ export function ParticipantsPage() {
       setEmail('');
     } catch (error) {
       console.error('Error adding participant:', error);
-      setError(formatErrorMessage(error as Error));
     } finally {
       setLoading(false);
     }
@@ -98,7 +93,6 @@ export function ParticipantsPage() {
       await repository.update(updatedDraw);
     } catch (error) {
       console.error('Error removing participant:', error);
-      setError(formatErrorMessage(error as Error));
     }
   };
 
@@ -125,7 +119,6 @@ export function ParticipantsPage() {
       navigate(`/draw/${id}/result`);
     } catch (error) {
       console.error('Error performing draw:', error);
-      setError(formatErrorMessage(error as Error));
     }
   };
 
@@ -137,7 +130,9 @@ export function ParticipantsPage() {
     );
   }
 
-  const canPerformDraw = draw?.participants?.length >= 4;
+  const participantsLength = draw?.participants?.length ?? 0;
+  const canPerformDraw = participantsLength >= 4;
+  const remainingParticipants = 4 - participantsLength;
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-[#0A0F1E] via-[#121A3A] to-[#0A0F1E] p-8">
@@ -261,7 +256,7 @@ export function ParticipantsPage() {
 
               {!canPerformDraw && (
                 <div className="text-gray-400 text-sm">
-                  Adicione mais {4 - draw?.participants.length} participantes para realizar o sorteio
+                  Adicione mais {remainingParticipants} participantes para realizar o sorteio
                 </div>
               )}
             </div>

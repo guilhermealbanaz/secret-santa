@@ -17,12 +17,10 @@ export class DrawFactory {
 
   static async createUseCases() {
     const repository = this.createRepository();
-    const service = this.createService();
-
     return {
       configure: new ConfigureDrawUseCase(repository),
       create: new CreateDrawUseCase(repository),
-      perform: new PerformDrawUseCase(repository, service),
+      perform: new PerformDrawUseCase(repository),
       viewResult: new ViewResultUseCase(repository)
     };
   }

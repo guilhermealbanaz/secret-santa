@@ -7,11 +7,6 @@ import { DrawFactory } from '../../infrastructure/factories/DrawFactory';
 import { ArrowLeft, Link as LinkIcon, Check, Mail } from 'lucide-react';
 import { config } from '../../lib/config';
 
-interface Participant {
-  name: string;
-  email: string;
-}
-
 export const DrawResultPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
