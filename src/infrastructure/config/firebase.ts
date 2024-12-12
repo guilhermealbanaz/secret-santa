@@ -10,13 +10,8 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-export const initializeFirebase = () => {
-  try {
-    const app = initializeApp(firebaseConfig);
-    const firestore = getFirestore(app);
-    return { app, firestore };
-  } catch (error) {
-    console.error('Error in initializeFirebase:', error);
-    throw error;
-  }
-}; 
+export function initializeFirebase() {
+  const app = initializeApp(firebaseConfig);
+  const firestore = getFirestore(app);
+  return { app, firestore };
+} 
