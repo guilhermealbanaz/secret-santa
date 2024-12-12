@@ -37,6 +37,8 @@ jobs:
         run: |
           touch dist/.nojekyll
           cp dist/index.html dist/404.html
+          cp -r public/* dist/
+          echo "ahorademudar.com.br" > dist/CNAME
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
@@ -47,3 +49,5 @@ jobs:
           clean: true
           clean-exclude: |
             .nojekyll
+            404.html
+            CNAME

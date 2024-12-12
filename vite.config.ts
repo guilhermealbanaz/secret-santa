@@ -1,9 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/secret-santa/',
+  base: '/',
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
@@ -18,14 +19,23 @@ export default defineConfig({
             './src/presentation/components/ui/input',
             './src/presentation/components/ui/alert'
           ]
-        }
+        },
+        assetFileNames: (assetInfo) => {
+          let extType = assetInfo.name.split('.').at(1);
+          if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(extType)) {
+            extType = 'img';
+          }
+          return `assets/${extType}/[name]-[hash][extname]`;
+        },
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: 'assets/js/[name]-[hash].js',
       }
     },
     chunkSizeWarningLimit: 600
   },
-  server: {
-    headers: {
-      'Content-Type': 'application/javascript'
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src')
     }
   }
 }) 
