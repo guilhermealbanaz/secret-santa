@@ -8,13 +8,13 @@ const LoadingFallback = () => (
   </div>
 );
 
-// Lazy loading dos componentes
-const HomePage = lazy(() => import('../pages/HomePage').then(module => ({ default: module.default })));
-const DrawPage = lazy(() => import('../pages/DrawPage').then(module => ({ default: module.default })));
-const ParticipantsPage = lazy(() => import('../pages/ParticipantsPage').then(module => ({ default: module.default })));
-const ParticipantRegistrationPage = lazy(() => import('../pages/ParticipantRegistrationPage').then(module => ({ default: module.default })));
-const DrawResultPage = lazy(() => import('../pages/DrawResultPage').then(module => ({ default: module.default })));
-const ViewResultPage = lazy(() => import('../pages/ViewResultPage').then(module => ({ default: module.default })));
+// Lazy loading dos componentes com importação default
+const HomePage = lazy(() => import('../pages/HomePage'));
+const DrawPage = lazy(() => import('../pages/DrawPage'));
+const ParticipantsPage = lazy(() => import('../pages/ParticipantsPage'));
+const ParticipantRegistrationPage = lazy(() => import('../pages/ParticipantRegistrationPage'));
+const DrawResultPage = lazy(() => import('../pages/DrawResultPage'));
+const ViewResultPage = lazy(() => import('../pages/ViewResultPage'));
 
 export function AppRoutes() {
   return (

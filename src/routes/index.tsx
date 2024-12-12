@@ -1,46 +1,35 @@
-import { createBrowserRouter } from 'react-router-dom';
-import { HomePage } from '../presentation/pages/HomePage';
-import { DrawPage } from '../presentation/pages/DrawPage';
-import { ParticipantsPage } from '../presentation/pages/ParticipantsPage';
-import { ParticipantRegistrationPage } from '../presentation/pages/ParticipantRegistrationPage';
-import { DrawResultPage } from '../presentation/pages/DrawResultPage';
-import { ViewResultPage } from '../presentation/pages/ViewResultPage';
-import { ErrorBoundary } from '../presentation/components/ErrorBoundary';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 
-export const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <HomePage />,
-    errorElement: <ErrorBoundary><p>Algo deu errado</p></ErrorBoundary>
-  },
-  {
-    path: '/draw/new',
-    element: <DrawPage />,
-    errorElement: <ErrorBoundary><p>Algo deu errado</p></ErrorBoundary>
-  },
-  {
-    path: '/draw/:id',
-    element: <DrawPage />,
-    errorElement: <ErrorBoundary><p>Algo deu errado</p></ErrorBoundary>
-  },
-  {
-    path: '/draw/:id/participants',
-    element: <ParticipantsPage />,
-    errorElement: <ErrorBoundary><p>Algo deu errado</p></ErrorBoundary>
-  },
-  {
-    path: '/draw/:id/register',
-    element: <ParticipantRegistrationPage />,
-    errorElement: <ErrorBoundary><p>Algo deu errado</p></ErrorBoundary>
-  },
-  {
-    path: '/draw/:id/result',
-    element: <DrawResultPage />,
-    errorElement: <ErrorBoundary><p>Algo deu errado</p></ErrorBoundary>
-  },
-  {
-    path: '/draw/:id/result/:email',
-    element: <ViewResultPage />,
-    errorElement: <ErrorBoundary><p>Algo deu errado</p></ErrorBoundary>
-  }
-]); 
+// Componente de loading
+const LoadingFallback = () => (
+  <div className="min-h-screen w-full bg-gradient-to-br from-[#0A0F1E] via-[#121A3A] to-[#0A0F1E] flex items-center justify-center">
+    <div className="text-white">Carregando...</div>
+  </div>
+);
+
+// Lazy loading dos componentes com importação default
+const HomePage = lazy(() => import('../presentation/pages/HomePage'));
+const DrawPage = lazy(() => import('../presentation/pages/DrawPage'));
+const ParticipantsPage = lazy(() => import('../presentation/pages/ParticipantsPage'));
+const ParticipantRegistrationPage = lazy(() => import('../presentation/pages/ParticipantRegistrationPage'));
+const DrawResultPage = lazy(() => import('../presentation/pages/DrawResultPage'));
+const ViewResultPage = lazy(() => import('../presentation/pages/ViewResultPage'));
+
+export function AppRoutes() {
+  return (
+    <BrowserRouter>
+      <Suspense fallback={<LoadingFallback />}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/draw/new" element={<DrawPage />} />
+          <Route path="/draw/:id" element={<DrawPage />} />
+          <Route path="/draw/:id/participants" element={<ParticipantsPage />} />
+          <Route path="/draw/:id/register" element={<ParticipantRegistrationPage />} />
+          <Route path="/draw/:id/result" element={<DrawResultPage />} />
+          <Route path="/draw/:id/result/:email" element={<ViewResultPage />} />
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
+  );
+} 
