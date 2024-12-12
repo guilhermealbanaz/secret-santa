@@ -7,6 +7,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: production
 
     steps:
       - uses: actions/checkout@v2
@@ -28,16 +29,31 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
         run: |
-          # Verificar todas as variáveis de ambiente necessárias
+          # Debug: mostrar valores mascarados das variáveis
+          echo "Checking if variables are set (values will be masked):"
+          echo "API_KEY: ${VITE_FIREBASE_API_KEY:0:5}..."
+          echo "AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN:0:5}..."
+          echo "PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID:0:5}..."
+          
+          # Verificar variáveis
+          missing_vars=()
           for var in VITE_FIREBASE_API_KEY VITE_FIREBASE_AUTH_DOMAIN VITE_FIREBASE_PROJECT_ID VITE_FIREBASE_STORAGE_BUCKET VITE_FIREBASE_MESSAGING_SENDER_ID VITE_FIREBASE_APP_ID; do
             if [ -z "${!var}" ]; then
-              echo "Error: $var is not set"
-              exit 1
+              missing_vars+=($var)
+            else
+              echo "$var is set"
             fi
-            echo "$var is set"
           done
           
-          # Executar o build
+          # Se houver variáveis faltando, mostrar erro
+          if [ ${#missing_vars[@]} -ne 0 ]; then
+            echo "Error: The following variables are not set:"
+            printf '%s\n' "${missing_vars[@]}"
+            exit 1
+          fi
+          
+          # Se todas as variáveis estiverem ok, fazer o build
+          echo "All variables are set, proceeding with build..."
           npm run build
         
       - name: Create .nojekyll file
