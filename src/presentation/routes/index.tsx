@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 
 // Componente de loading
@@ -18,7 +18,7 @@ const ViewResultPage = lazy(() => import('../pages/ViewResultPage'));
 
 export function AppRoutes() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Suspense fallback={<LoadingFallback />}>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -30,6 +30,6 @@ export function AppRoutes() {
           <Route path="/draw/:id/result/:email" element={<ViewResultPage />} />
         </Routes>
       </Suspense>
-    </BrowserRouter>
+    </HashRouter>
   );
 } 
