@@ -8,12 +8,19 @@ import { ArrowLeft } from 'lucide-react';
 import { Participant } from '../../domain/entities/Participant';
 import { SecretSantaReveal } from '../components/SecretSantaReveal';
 import { VerificationCodeInput } from '../components/VerificationCodeInput';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '../../lib/firebase';
+import { sendVerificationCodeFunction, verifyCodeFunction } from '../../lib/firebase';
 
 interface ParticipantResult {
   giver: Participant;
   receiver: Participant;
+}
+
+interface VerifyCodeResponse {
+  verified: boolean;
+}
+
+interface SendCodeResponse {
+  success: boolean;
 }
 
 export default function ViewResultPage() {
@@ -71,9 +78,12 @@ export default function ViewResultPage() {
 
     try {
       setLoading(true);
-      const sendCode = httpsCallable(functions, 'sendVerificationCode');
-      await sendCode({ drawId: id, email });
-      setIsCodeSent(true);
+      const result = await sendVerificationCodeFunction({ drawId: id, email });
+      const response = result.data as SendCodeResponse;
+      
+      if (response.success) {
+        setIsCodeSent(true);
+      }
     } catch (error: any) {
       console.error('Erro ao enviar código:', error);
       setError(error.message || 'Falha ao enviar código de verificação');
@@ -87,10 +97,10 @@ export default function ViewResultPage() {
 
     try {
       setLoading(true);
-      const verifyCodeFn = httpsCallable(functions, 'verifyCode');
-      const result = await verifyCodeFn({ drawId: id, email, code });
+      const result = await verifyCodeFunction({ drawId: id, email, code });
+      const response = result.data as VerifyCodeResponse;
       
-      if (result.data.verified) {
+      if (response.verified) {
         setIsVerified(true);
         await loadResult();
       }

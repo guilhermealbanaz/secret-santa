@@ -7,20 +7,22 @@ import {
 } from '@sendinblue/client';
 import * as functions from 'firebase-functions';
 
-interface VerificationData {
-  drawId: string;
-  email: string;
-}
+// interface VerificationData {
+//   drawId: string;
+//   email: string;
+// }
 
 const apiInstance = new TransactionalEmailsApi();
 const brevoConfig = functions.config().brevo || {};
 const apiKey = brevoConfig.api_key || '';
 apiInstance.setApiKey(TransactionalEmailsApiApiKeys.apiKey, apiKey);
 
-export const sendVerificationCode = onCall<VerificationData>(
+export const sendVerificationCode = onCall(
   {
-    cors: ['*'],
-    maxInstances: 10,
+    enforceAppCheck: false,
+    timeoutSeconds: 60,
+    memory: '256MiB',
+    region: 'us-central1',
   },
   async (request) => {
     const { data } = request;

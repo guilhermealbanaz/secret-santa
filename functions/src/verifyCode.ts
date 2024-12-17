@@ -1,16 +1,18 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
-interface VerifyCodeData {
-  drawId: string;
-  email: string;
-  code: string;
-}
+// interface VerifyCodeData {
+//   drawId: string;
+//   email: string;
+//   code: string;
+// }
 
-export const verifyCode = onCall<VerifyCodeData>(
+export const verifyCode = onCall(
   {
-    cors: ['*'],
-    maxInstances: 10,
+    enforceAppCheck: false, // Desabilitar verificação de app temporariamente
+    timeoutSeconds: 60,
+    memory: '256MiB',
+    region: 'us-central1',
   },
   async (request) => {
     const { data } = request;
