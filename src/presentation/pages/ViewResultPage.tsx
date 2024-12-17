@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Card } from '../components/ui/card';
 import { DrawFactory } from '../../infrastructure/factories/DrawFactory';
 import { Draw } from '../../domain/entities/Draw';
 import { Button } from '../components/ui/button';
-import { ArrowLeft, Gift, User } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Participant } from '../../domain/entities/Participant';
+import { SecretSantaReveal } from '../components/SecretSantaReveal';
+import { VerificationCodeInput } from '../components/VerificationCodeInput';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../../lib/firebase';
 
 interface ParticipantResult {
   giver: Participant;
@@ -19,143 +23,165 @@ export default function ViewResultPage() {
   const [draw, setDraw] = useState<Draw | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [revealed, setRevealed] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
+  const [isCodeSent, setIsCodeSent] = useState(false);
 
   useEffect(() => {
-    const loadResult = async () => {
+    const loadDraw = async () => {
       if (!id || !email) {
-        setError('Invalid URL');
+        setError('URL inválida');
         setLoading(false);
         return;
       }
 
       try {
         const repository = DrawFactory.createRepository();
-        const draw = await repository.findById(id);
+        const drawData = await repository.findById(id);
 
-        if (!draw) {
-          setError('Draw not found');
+        if (!drawData) {
+          setError('Sorteio não encontrado');
           setLoading(false);
           return;
         }
 
-        setDraw(draw);
-
-        if (!draw.result || !draw.result[email]) {
-          setError('Result not found');
+        if (!drawData.performed) {
+          setError('O sorteio ainda não foi realizado');
           setLoading(false);
           return;
         }
 
-        const giver = draw.participants.find(p => p.email === email);
-        const receiverEmail = draw.result[email];
-        const receiver = draw.participants.find(p => p.email === receiverEmail);
-
-        if (!giver || !receiver) {
-          setError('Participant not found');
-          setLoading(false);
-          return;
-        }
-
-        setResult({ giver, receiver });
+        setDraw(drawData);
         setLoading(false);
+
+        // Enviar código de verificação automaticamente
+        await sendVerificationCode();
+        setIsCodeSent(true);
       } catch (error) {
-        console.error('Error loading result:', error);
-        setError('Error loading result');
+        console.error('Erro ao carregar sorteio:', error);
+        setError('Falha ao carregar o sorteio');
         setLoading(false);
       }
     };
 
-    loadResult();
+    loadDraw();
   }, [id, email]);
+
+  const sendVerificationCode = async () => {
+    if (!id || !email) return;
+
+    try {
+      setLoading(true);
+      const sendCode = httpsCallable(functions, 'sendVerificationCode');
+      await sendCode({ drawId: id, email });
+      setIsCodeSent(true);
+    } catch (error: any) {
+      console.error('Erro ao enviar código:', error);
+      setError(error.message || 'Falha ao enviar código de verificação');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyCode = async (code: string) => {
+    if (!id || !email || !draw) return;
+
+    try {
+      setLoading(true);
+      const verifyCodeFn = httpsCallable(functions, 'verifyCode');
+      const result = await verifyCodeFn({ drawId: id, email, code });
+      
+      if (result.data.verified) {
+        setIsVerified(true);
+        await loadResult();
+      }
+    } catch (error: any) {
+      const message = error.message || 'Falha ao verificar código';
+      throw new Error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadResult = async () => {
+    if (!draw || !email) return;
+
+    const giver = draw.participants.find(p => p.email === email);
+    if (!giver) {
+      setError('Participante não encontrado');
+      return;
+    }
+
+    const receiverEmail = draw.result[email];
+    if (!receiverEmail) {
+      setError('Resultado não encontrado');
+      return;
+    }
+
+    const receiver = draw.participants.find(p => p.email === receiverEmail);
+    if (!receiver) {
+      setError('Amigo secreto não encontrado');
+      return;
+    }
+
+    setResult({ giver, receiver });
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen w-full bg-gradient-to-br from-[#0A0F1E] via-[#121A3A] to-[#0A0F1E] flex items-center justify-center">
-        <p className="text-white">Carregando...</p>
+        <div className="text-white">Carregando...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-[#0A0F1E] via-[#121A3A] to-[#0A0F1E] flex items-center justify-center">
-        <Card className="bg-[#151B30]/50 border border-[#252B45] shadow-xl backdrop-blur-sm max-w-md w-full mx-4">
-          <CardContent className="p-8 text-center">
-            <p className="text-red-500">{error}</p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen w-full bg-gradient-to-br from-[#0A0F1E] via-[#121A3A] to-[#0A0F1E] p-8">
+        <div className="max-w-md mx-auto">
+          <Card className="bg-[#151B30]/50 border border-[#252B45] shadow-xl backdrop-blur-sm">
+            <div className="p-6 text-center">
+              <h2 className="text-2xl font-bold text-white mb-4">Erro</h2>
+              <p className="text-gray-400 mb-6">{error}</p>
+              <Button
+                onClick={() => navigate('/')}
+                className="flex items-center gap-2 mx-auto"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Voltar para a página inicial
+              </Button>
+            </div>
+          </Card>
+        </div>
       </div>
     );
   }
 
+  if (!isVerified && email) {
+    return (
+      <div className="min-h-screen w-full bg-gradient-to-br from-[#0A0F1E] via-[#121A3A] to-[#0A0F1E] p-8">
+        <div className="max-w-md mx-auto">
+          <VerificationCodeInput
+            email={email}
+            isCodeSent={isCodeSent}
+            onVerify={verifyCode}
+            onResend={sendVerificationCode}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (!result || !draw) return null;
+
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-[#0A0F1E] via-[#121A3A] to-[#0A0F1E] p-8">
-      <Button
-        variant="ghost"
-        onClick={() => navigate('/')}
-        className="absolute top-8 left-8 text-gray-400 hover:text-white hover:bg-[#252B45] transition-all duration-300 flex items-center gap-2 px-4 py-2"
-      >
-        <ArrowLeft className="h-5 w-5" />
-        Voltar
-      </Button>
-
-      <div className="max-w-2xl mx-auto space-y-8 pt-16">
-        <div className="space-y-4 text-center">
-          <h1 className="text-4xl font-bold text-white">Seu Amigo Secreto</h1>
-          <p className="text-xl text-gray-400/80">
-            {draw?.name}
-          </p>
-        </div>
-
-        <Card className="bg-[#151B30]/50 border border-[#252B45] shadow-xl backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-white text-center">
-              {result?.giver?.name && `Olá, ${result.giver.name}!`}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-8">
-            <div className="space-y-8">
-              {!revealed ? (
-                <div className="text-center space-y-6">
-                  <div className="w-24 h-24 mx-auto bg-blue-600/10 rounded-full flex items-center justify-center">
-                    <Gift className="h-12 w-12 text-blue-400" />
-                  </div>
-                  <p className="text-gray-400">
-                    Clique no botão abaixo para revelar seu amigo secreto
-                  </p>
-                  <Button
-                    onClick={() => setRevealed(true)}
-                    className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium transition-all duration-300"
-                  >
-                    Revelar Amigo Secreto
-                  </Button>
-                </div>
-              ) : (
-                <div className="text-center space-y-6">
-                  <div className="w-24 h-24 mx-auto bg-green-600/10 rounded-full flex items-center justify-center">
-                    <User className="h-12 w-12 text-green-400" />
-                  </div>
-                  <div>
-                    <p className="text-gray-400 mb-2">Seu amigo secreto é</p>
-                    <h2 className="text-3xl font-bold text-white mb-1">
-                      {result?.receiver?.name}
-                    </h2>
-                    <p className="text-gray-400 text-sm">
-                      {result?.receiver?.email}
-                    </p>
-                  </div>
-                  <div className="pt-4 border-t border-[#252B45]">
-                    <p className="text-gray-400 text-sm">
-                      Guarde essa informação com carinho e prepare uma surpresa especial! 🎁
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+      <div className="max-w-2xl mx-auto">
+        <SecretSantaReveal
+          email={result.giver.email}
+          drawName={draw.name}
+          secretFriend={result.receiver.name}
+        />
       </div>
     </div>
   );
-} 
+}
