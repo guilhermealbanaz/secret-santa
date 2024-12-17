@@ -19,7 +19,7 @@ apiInstance.setApiKey(TransactionalEmailsApiApiKeys.apiKey, apiKey);
 
 export const sendVerificationCode = onCall<VerificationData>(
   {
-    cors: true,
+    cors: ['*'],
     maxInstances: 10,
   },
   async (request) => {

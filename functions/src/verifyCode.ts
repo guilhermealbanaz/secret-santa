@@ -9,7 +9,7 @@ interface VerifyCodeData {
 
 export const verifyCode = onCall<VerifyCodeData>(
   {
-    cors: true,
+    cors: ['*'],
     maxInstances: 10,
   },
   async (request) => {
