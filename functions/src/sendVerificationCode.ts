@@ -19,7 +19,7 @@ apiInstance.setApiKey(TransactionalEmailsApiApiKeys.apiKey, apiKey);
 
 export const sendVerificationCode = onCall<VerificationData>(
   {
-    cors: true,
+    cors: ['https://ahorademudar.com.br', 'https://www.ahorademudar.com.br'],
     maxInstances: 10,
   },
   async (request) => {
