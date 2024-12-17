@@ -11,7 +11,7 @@ const firebaseConfig = {
 };
 
 export const app = initializeApp(firebaseConfig);
-export const functions = getFunctions(app, 'us-central1');
+export const functions = getFunctions(app);
 
 // Conectar ao emulador local se estiver em desenvolvimento
 if (import.meta.env.DEV) {
